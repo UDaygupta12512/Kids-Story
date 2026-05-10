@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +17,9 @@ interface Challenge {
 }
 
 const StoryChallenges = () => {
+  const navigate = useNavigate();
   const [completedChallenges, setCompletedChallenges] = useState<string[]>([]);
+  const [pointsEarned, setPointsEarned] = useState(0);
 
   // Generate challenges based on current date
   const generateDailyChallenges = (): Challenge[] => {
@@ -86,7 +89,8 @@ const StoryChallenges = () => {
 
   const generateWeeklyChallenges = (): Challenge[] => {
     const today = new Date();
-    const weekNumber = Math.floor(today.getDate() / 7);
+    // Use epoch-based week number for consistent weekly cycling
+    const weekNumber = Math.floor(today.getTime() / (7 * 24 * 60 * 60 * 1000));
     
     const weeklyPrompts = [
       {
@@ -134,6 +138,27 @@ const StoryChallenges = () => {
   const [dailyChallenges] = useState(generateDailyChallenges());
   const [weeklyChallenges] = useState(generateWeeklyChallenges());
 
+  useEffect(() => {
+    const stored = localStorage.getItem('storyChallengesProgress');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as { completed: string[]; points: number };
+        setCompletedChallenges(parsed.completed || []);
+        setPointsEarned(parsed.points || 0);
+      } catch {
+        setCompletedChallenges([]);
+        setPointsEarned(0);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('storyChallengesProgress', JSON.stringify({
+      completed: completedChallenges,
+      points: pointsEarned
+    }));
+  }, [completedChallenges, pointsEarned]);
+
   const getTimeRemaining = (expiresAt: Date) => {
     const now = new Date();
     const diff = expiresAt.getTime() - now.getTime();
@@ -142,13 +167,17 @@ const StoryChallenges = () => {
     return `${hours}h ${minutes}m`;
   };
 
-  const handleStartChallenge = (challengeId: string) => {
-    // This would typically navigate to the story form with the challenge prompt pre-filled
-    console.log('Starting challenge:', challengeId);
+  const handleStartChallenge = (challenge: Challenge) => {
+    // Store the prompt so StoryForm can pick it up, then navigate to the create section
+    localStorage.setItem('challengePrompt', challenge.prompt);
+    navigate('/#create');
   };
 
-  const handleCompleteChallenge = (challengeId: string) => {
-    setCompletedChallenges([...completedChallenges, challengeId]);
+  const handleCompleteChallenge = (challenge: Challenge) => {
+    if (!completedChallenges.includes(challenge.id)) {
+      setCompletedChallenges(prev => [...prev, challenge.id]);
+      setPointsEarned(prev => prev + challenge.points);
+    }
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -198,13 +227,24 @@ const StoryChallenges = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm">{challenge.prompt}</p>
-          <Button 
-            onClick={() => handleStartChallenge(challenge.id)}
-            disabled={isCompleted}
-            className="w-full"
-          >
-            {isCompleted ? "Challenge Completed! 🎉" : "Start Challenge"}
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button
+              onClick={() => handleStartChallenge(challenge)}
+              disabled={isCompleted}
+              className="w-full"
+            >
+              {isCompleted ? "Challenge Completed! 🎉" : "Start Challenge"}
+            </Button>
+            {!isCompleted && (
+              <Button
+                variant="outline"
+                onClick={() => handleCompleteChallenge(challenge)}
+                className="w-full"
+              >
+                Mark as Completed
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
     );
@@ -235,7 +275,7 @@ const StoryChallenges = () => {
             <Card className="bg-primary/5">
               <CardContent className="pt-6 text-center">
                 <div className="text-3xl font-bold text-primary">
-                  {completedChallenges.length * 50}
+                  {pointsEarned}
                 </div>
                 <div className="text-sm text-muted-foreground">Points Earned</div>
               </CardContent>

@@ -8,6 +8,9 @@ import { Features } from "@/components/Features";
 import { HowItWorks } from "@/components/HowItWorks";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import { DashboardSummary } from "@/components/DashboardSummary";
+import { UniqueFeatures } from "@/components/UniqueFeatures";
+import { DidYouKnow } from "@/components/DidYouKnow";
 
 const Index = () => {
   const [storyText, setStoryText] = useState("");
@@ -17,6 +20,9 @@ const Index = () => {
   const handleStoryGenerated = (text: string, theme: string) => {
     setStoryText(text);
     setStoryTheme(theme);
+    // Save to localStorage so Games page and other features can access the story
+    localStorage.setItem('generatedStory', text);
+    localStorage.setItem('lastTheme', theme);
   };
 
   // Add decorative bubbles
@@ -110,11 +116,26 @@ const Index = () => {
                   👨‍👩‍👧‍👦 For Educators
                 </Button>
               </Link>
+              
+              <Link to="/games">
+                <Button 
+                  variant="outline" 
+                  className="border-pink-500 text-pink-500 hover:bg-pink-500/10 py-4 px-8 text-lg"
+                >
+                  🎧 Audio Stories
+                </Button>
+              </Link>
             </div>
           </div>
         </section>
         
+        <DashboardSummary />
+        
         <Features />
+
+        <UniqueFeatures />
+
+        <DidYouKnow />
         
         <HowItWorks />
         

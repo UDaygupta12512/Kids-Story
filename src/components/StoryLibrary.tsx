@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { BookOpen, Trash2, Eye, Star, Tag, FolderOpen } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -37,6 +38,7 @@ type StoryLibraryProps = {
 };
 
 export function StoryLibrary({ currentStory, currentTheme, onLoadStory }: StoryLibraryProps) {
+  const navigate = useNavigate();
   const [savedStories, setSavedStories] = useState<SavedStory[]>([]);
   const [selectedStory, setSelectedStory] = useState<SavedStory | null>(null);
   const [showDialog, setShowDialog] = useState(false);
@@ -46,7 +48,35 @@ export function StoryLibrary({ currentStory, currentTheme, onLoadStory }: StoryL
 
   useEffect(() => {
     loadStoriesFromStorage();
+    const generated = localStorage.getItem('generatedStory');
+    const lastTheme = localStorage.getItem('lastTheme') || 'adventure';
+    if (generated) {
+      const stored = localStorage.getItem('savedStories');
+      const stories = stored ? (JSON.parse(stored) as SavedStory[]) : [];
+      const alreadySaved = stories.some((story) => story.text === generated);
+      if (!alreadySaved) {
+        const newStory: SavedStory = {
+          id: Date.now().toString(),
+          title: generated.substring(0, 50) + "...",
+          text: generated,
+          theme: lastTheme,
+          timestamp: Date.now(),
+        };
+        const updated = [newStory, ...stories];
+        setSavedStories(updated);
+        localStorage.setItem('savedStories', JSON.stringify(updated));
+      }
+    }
   }, []);
+
+  // Keep selectedStory in sync with savedStories so dialog inputs (e.g. collection) reflect updates
+  useEffect(() => {
+    if (selectedStory) {
+      const updated = savedStories.find(s => s.id === selectedStory.id);
+      if (updated) setSelectedStory(updated);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedStories]);
 
   const loadStoriesFromStorage = () => {
     const stored = localStorage.getItem('savedStories');
@@ -145,6 +175,12 @@ export function StoryLibrary({ currentStory, currentTheme, onLoadStory }: StoryL
     return matchesTag && matchesCollection;
   });
 
+  const openInGames = (storyText: string) => {
+    localStorage.setItem('generatedStory', storyText);
+    if (currentTheme) localStorage.setItem('lastTheme', currentTheme);
+    navigate('/games');
+  };
+
   return (
     <div className="story-card p-6">
       <div className="flex items-center justify-between mb-6">
@@ -161,6 +197,26 @@ export function StoryLibrary({ currentStory, currentTheme, onLoadStory }: StoryL
           </Button>
         )}
       </div>
+
+      {currentStory && (
+        <div className="mb-6 rounded-xl border border-kids-blue/20 bg-kids-blue/5 p-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <p className="text-xs text-gray-500">Loaded Story Preview</p>
+              <p className="font-semibold text-gray-800 line-clamp-2">{currentStory.substring(0, 120)}...</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={() => openInGames(currentStory)}
+                className="bg-kids-blue text-white hover:bg-kids-blue/90"
+              >
+                Open in Games
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {savedStories.length > 0 && (
         <div className="flex flex-wrap gap-3 mb-6">
@@ -192,7 +248,7 @@ export function StoryLibrary({ currentStory, currentTheme, onLoadStory }: StoryL
 
       {savedStories.length === 0 ? (
         <p className="text-center text-gray-500 py-8">
-          No saved stories yet. Create and save your first story!
+          No saved stories yet. Create a story or add a sample one.
         </p>
       ) : filteredStories.length === 0 ? (
         <p className="text-center text-gray-500 py-8">
@@ -276,6 +332,30 @@ export function StoryLibrary({ currentStory, currentTheme, onLoadStory }: StoryL
               </div>
             </Card>
           ))}
+        </div>
+      )}
+
+      {savedStories.length === 0 && (
+        <div className="mt-4 flex justify-center">
+          <Button
+            onClick={() => {
+              const sampleStory = "Once upon a time, a curious fox named Luma explored the school library and found a glowing book that whispered new words.";
+              const newStory: SavedStory = {
+                id: Date.now().toString(),
+                title: "Sample Story...",
+                text: sampleStory,
+                theme: "friendship",
+                timestamp: Date.now(),
+              };
+              const updated = [newStory, ...savedStories];
+              setSavedStories(updated);
+              localStorage.setItem('savedStories', JSON.stringify(updated));
+              toast.success("Sample story added!");
+            }}
+            className="bg-kids-purple text-white hover:bg-kids-purple/90"
+          >
+            Add Sample Story
+          </Button>
         </div>
       )}
 

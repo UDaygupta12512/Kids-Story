@@ -10,6 +10,7 @@ import Creative from "./pages/Creative";
 import ParentsTeachers from "./pages/ParentsTeachers";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/games" element={<Games />} />
           <Route path="/creative" element={<Creative />} />
           <Route path="/parents-teachers" element={<ParentsTeachers />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/auth" element={<Auth />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

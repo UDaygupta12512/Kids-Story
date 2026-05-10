@@ -21,6 +21,16 @@ const features = [
     title: "Easy Sharing",
     description: "Print stories or save them digitally to enjoy again and again.",
     color: "kids-green"
+  },
+  {
+    title: "Dynamic Topics + Challenges",
+    description: "The dashboard stays alive with rotating topics of the day and fresh challenges.",
+    color: "kids-blue"
+  },
+  {
+    title: "Story-Aware Quizzes",
+    description: "Quizzes are generated from your child's actual story for truly personal learning.",
+    color: "kids-purple"
   }
 ];
 
@@ -31,7 +41,7 @@ export function Features() {
         Magical Features
       </h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto px-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto px-4">
         {features.map((feature, index) => (
           <div 
             key={index}

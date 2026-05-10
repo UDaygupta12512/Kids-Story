@@ -30,19 +30,24 @@ serve(async (req) => {
       : 'Include a clear but gentle moral that emerges naturally from the story.';
 
     const prompt = `Write a delightful children's story (400-700 words) for ages 4-10.
-- Main character: ${mainCharacter}
-- Setting: ${setting}
-- Theme: ${theme}
-- Extra details: ${details || 'N/A'}
-- Tone: ${toneGuide[tone as keyof typeof toneGuide] || toneGuide.adventurous}
-- Moral guidance: ${moralGuidance}
+  - Main character: ${mainCharacter}
+  - Setting: ${setting}
+  - Theme: ${theme}
+  - Extra details: ${details || 'N/A'}
+  - Tone: ${toneGuide[tone as keyof typeof toneGuide] || toneGuide.adventurous}
+  - Moral guidance: ${moralGuidance}
 
-Requirements:
-- Use a ${tone} tone throughout the story
-- Clear beginning, middle, and end with gentle conflict and resolution
-- Simple vocabulary suited for kids
-- Add light dialogue and sensory details
-- ${moralFocus >= 30 ? 'Conclude with a short, kid-friendly moral on the last line starting with "Moral:"' : 'Let the moral emerge naturally from the story events'}`;
+  Hard requirements (must follow):
+  - Mention the main character by name in the first 2 sentences.
+  - Mention the setting in the first paragraph.
+  - Use the provided details when possible.
+
+  Requirements:
+  - Use a ${tone} tone throughout the story
+  - Clear beginning, middle, and end with gentle conflict and resolution
+  - Simple vocabulary suited for kids
+  - Add light dialogue and sensory details
+  - ${moralFocus >= 30 ? 'Conclude with a short, kid-friendly moral on the last line starting with "Moral:"' : 'Let the moral emerge naturally from the story events'}`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

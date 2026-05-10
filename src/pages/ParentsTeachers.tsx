@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Download, BookOpen, Users, Lightbulb } from "lucide-react";
+import { SkillTracker } from "@/components/SkillTracker";
+import { RealWorldTasks } from "@/components/RealWorldTasks";
+import { ChildPersonalityEngine } from "@/components/ChildPersonalityEngine";
 
 const ParentsTeachers = () => {
   const educationalBenefits = [
@@ -53,8 +56,133 @@ const ParentsTeachers = () => {
   ];
 
   const downloadTemplate = (templateName: string) => {
-    console.log(`Downloading template: ${templateName}`);
-    // In a real app, this would download actual PDF templates
+    const canvas = document.createElement('canvas');
+    canvas.width = 794; // A4 at 96dpi
+    canvas.height = 1123;
+    const ctx = canvas.getContext('2d')!;
+
+    // White background
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Decorative border
+    ctx.strokeStyle = '#A855F7';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+    // Title
+    ctx.fillStyle = '#7C3AED';
+    ctx.font = 'bold 28px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`📖 ${templateName}`, canvas.width / 2, 70);
+    ctx.fillStyle = '#6B7280';
+    ctx.font = '14px Arial, sans-serif';
+    ctx.fillText('Kids Talebook — Printable Template', canvas.width / 2, 95);
+
+    ctx.textAlign = 'left';
+    let y = 130;
+
+    if (templateName === 'Story Planning') {
+      const sections = [
+        { label: '✏️ Story Title:', lines: 2 },
+        { label: '👤 Main Character (Name, Age, Appearance):', lines: 4 },
+        { label: '🏰 Setting (Where & When):', lines: 3 },
+        { label: '⭐ Beginning — How does the story start?', lines: 5 },
+        { label: '🔥 Middle — What problem or adventure happens?', lines: 6 },
+        { label: '🎉 Ending — How is it resolved?', lines: 5 },
+        { label: '💡 Lesson or Moral:', lines: 2 },
+      ];
+      for (const section of sections) {
+        ctx.fillStyle = '#7C3AED';
+        ctx.font = 'bold 16px Arial, sans-serif';
+        ctx.fillText(section.label, 50, y);
+        y += 25;
+        ctx.strokeStyle = '#D1D5DB';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < section.lines; i++) {
+          ctx.beginPath();
+          ctx.moveTo(50, y);
+          ctx.lineTo(canvas.width - 50, y);
+          ctx.stroke();
+          y += 28;
+        }
+        y += 10;
+      }
+    } else if (templateName === 'Comic Strip') {
+      ctx.fillStyle = '#6B7280';
+      ctx.font = '14px Arial, sans-serif';
+      ctx.fillText('Draw your story in the panels below. Add speech bubbles and captions!', 50, y);
+      y += 30;
+      const panelW = 340;
+      const panelH = 250;
+      const gap = 20;
+      const startX = (canvas.width - panelW * 2 - gap) / 2;
+      ctx.strokeStyle = '#374151';
+      ctx.lineWidth = 2;
+      for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 2; col++) {
+          const px = startX + col * (panelW + gap);
+          const py = y + row * (panelH + gap);
+          ctx.strokeRect(px, py, panelW, panelH);
+          ctx.fillStyle = '#D1D5DB';
+          ctx.font = '12px Arial, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(`Panel ${row * 2 + col + 1}`, px + panelW / 2, py + panelH + 14);
+          ctx.textAlign = 'left';
+        }
+      }
+    } else if (templateName === 'Story Journal') {
+      const prompts = [
+        'Today I feel...',
+        'Something interesting that happened today:',
+        'A story idea I have:',
+        'My favorite character would...',
+        'If I could go anywhere, I would go to...',
+        'Draw something from your imagination below:',
+      ];
+      ctx.fillStyle = '#6B7280';
+      ctx.font = '14px Arial, sans-serif';
+      ctx.fillText('Date: _______________', 50, y);
+      y += 35;
+      for (const prompt of prompts) {
+        ctx.fillStyle = '#7C3AED';
+        ctx.font = 'bold 15px Arial, sans-serif';
+        ctx.fillText(prompt, 50, y);
+        y += 25;
+        ctx.strokeStyle = '#D1D5DB';
+        ctx.lineWidth = 1;
+        const lines = prompt.includes('Draw') ? 0 : 4;
+        for (let i = 0; i < lines; i++) {
+          ctx.beginPath();
+          ctx.moveTo(50, y);
+          ctx.lineTo(canvas.width - 50, y);
+          ctx.stroke();
+          y += 26;
+        }
+        if (prompt.includes('Draw')) {
+          ctx.strokeStyle = '#D1D5DB';
+          ctx.setLineDash([5, 5]);
+          ctx.strokeRect(50, y, canvas.width - 100, 200);
+          ctx.setLineDash([]);
+          y += 210;
+        }
+        y += 10;
+      }
+    }
+
+    // Footer
+    ctx.fillStyle = '#9CA3AF';
+    ctx.font = '11px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('© Kids Talebook — Print and enjoy!', canvas.width / 2, canvas.height - 35);
+
+    // Download as PNG (universally printable)
+    const link = document.createElement('a');
+    link.download = `${templateName.replace(/\s+/g, '-').toLowerCase()}-template.png`;
+    link.href = canvas.toDataURL('image/png');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -74,6 +202,20 @@ const ParentsTeachers = () => {
               to enhance your child's learning journey.
             </p>
           </div>
+          {/* Child Personality Engine */}
+          <section className="animate-fade-in mt-12 mb-16">
+            <ChildPersonalityEngine />
+          </section>
+
+          {/* Skill Tracker Dashboard */}
+          <section className="animate-fade-in mb-16">
+            <SkillTracker />
+          </section>
+
+          {/* Real World Tasks */}
+          <section className="animate-fade-in mb-16">
+            <RealWorldTasks />
+          </section>
 
           {/* Educational Benefits */}
           <section className="animate-fade-in">

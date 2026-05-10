@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sparkles, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import {
   Select,
   SelectContent,
@@ -24,7 +25,13 @@ type Character = {
   color: string;
 };
 
+type SavedCharacter = Character & {
+  id: string;
+  createdAt: number;
+};
+
 export function CharacterBuilder({ onCharacterCreated }: CharacterBuilderProps) {
+  const navigate = useNavigate();
   const [character, setCharacter] = useState<Character>({
     name: "",
     type: "human",
@@ -32,6 +39,23 @@ export function CharacterBuilder({ onCharacterCreated }: CharacterBuilderProps) 
     specialPower: "",
     color: "#9b87f5"
   });
+  const [savedCharacters, setSavedCharacters] = useState<SavedCharacter[]>([]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('savedCharacters');
+    if (stored) {
+      try {
+        setSavedCharacters(JSON.parse(stored));
+      } catch {
+        setSavedCharacters([]);
+      }
+    }
+  }, []);
+
+  const persistCharacters = (updated: SavedCharacter[]) => {
+    setSavedCharacters(updated);
+    localStorage.setItem('savedCharacters', JSON.stringify(updated));
+  };
 
   const characterTypes = [
     { value: "human", label: "Human" },
@@ -66,6 +90,15 @@ export function CharacterBuilder({ onCharacterCreated }: CharacterBuilderProps) 
       return;
     }
 
+    const newCharacter: SavedCharacter = {
+      ...character,
+      id: Date.now().toString(),
+      createdAt: Date.now(),
+    };
+
+    const updated = [newCharacter, ...savedCharacters].slice(0, 12);
+    persistCharacters(updated);
+
     onCharacterCreated?.(character);
     toast.success(`${character.name} has been created! Use them in your next story.`);
     
@@ -92,6 +125,47 @@ export function CharacterBuilder({ onCharacterCreated }: CharacterBuilderProps) 
     });
     
     toast.success("Random character generated!");
+  };
+
+  const quickPowers = [
+    "flight",
+    "talking to animals",
+    "super speed",
+    "weather control",
+    "time travel",
+    "music magic",
+  ];
+
+  const useInStory = (saved: SavedCharacter) => {
+    const details = `Character profile: ${saved.name} is a ${saved.personality} ${saved.type}${saved.specialPower ? ` with the power of ${saved.specialPower}` : ''}. Favorite color: ${saved.color}.`;
+    localStorage.setItem('storyDraft', JSON.stringify({
+      mainCharacter: saved.name,
+      details,
+      theme: 'adventure'
+    }));
+    toast.success('Character sent to the Story Creator!');
+    navigate('/#create');
+  };
+
+  const removeCharacter = (id: string) => {
+    const updated = savedCharacters.filter((item) => item.id !== id);
+    persistCharacters(updated);
+    toast.success('Character removed.');
+  };
+
+  const createAndStart = () => {
+    if (!character.name) {
+      toast.error("Please give your character a name!");
+      return;
+    }
+    const details = `Character profile: ${character.name} is a ${character.personality} ${character.type}${character.specialPower ? ` with the power of ${character.specialPower}` : ''}. Favorite color: ${character.color}.`;
+    localStorage.setItem('storyDraft', JSON.stringify({
+      mainCharacter: character.name,
+      details,
+      theme: 'adventure'
+    }));
+    toast.success('Character sent to the Story Creator!');
+    navigate('/#create');
   };
 
   return (
@@ -154,6 +228,18 @@ export function CharacterBuilder({ onCharacterCreated }: CharacterBuilderProps) 
             onChange={(e) => setCharacter({ ...character, specialPower: e.target.value })}
             className="rounded-lg border-kids-purple/30"
           />
+          <div className="flex flex-wrap gap-2">
+            {quickPowers.map((power) => (
+              <button
+                key={power}
+                type="button"
+                onClick={() => setCharacter({ ...character, specialPower: power })}
+                className="text-xs px-2 py-1 rounded-full border border-kids-purple/30 text-kids-purple hover:bg-kids-purple/10"
+              >
+                {power}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -189,6 +275,14 @@ export function CharacterBuilder({ onCharacterCreated }: CharacterBuilderProps) 
           </Button>
         </div>
 
+        <Button
+          onClick={createAndStart}
+          variant="outline"
+          className="w-full border-kids-blue text-kids-blue hover:bg-kids-blue/10"
+        >
+          Create & Start a Story
+        </Button>
+
         {character.name && (
           <div className="mt-6 p-4 rounded-lg border-2 border-dashed border-kids-purple/30 bg-kids-purple/5">
             <h4 className="font-bold text-sm mb-2 text-kids-purple">Character Preview:</h4>
@@ -202,4 +296,42 @@ export function CharacterBuilder({ onCharacterCreated }: CharacterBuilderProps) 
       </div>
     </div>
   );
+
+      {savedCharacters.length > 0 && (
+        <div className="mt-8 border-t border-kids-purple/10 pt-6">
+          <h4 className="text-sm font-bold text-kids-purple mb-4">Your Characters</h4>
+          <div className="space-y-3">
+            {savedCharacters.map((saved) => (
+              <div
+                key={saved.id}
+                className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-lg border border-kids-purple/20 bg-white p-3"
+              >
+                <div>
+                  <p className="font-semibold text-gray-800">{saved.name}</p>
+                  <p className="text-xs text-gray-500">
+                    {saved.personality} {saved.type}{saved.specialPower ? ` • ${saved.specialPower}` : ''}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => useInStory(saved)}
+                    className="bg-kids-purple text-white hover:bg-kids-purple/90"
+                  >
+                    Use in Story
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => removeCharacter(saved.id)}
+                    className="border-kids-orange text-kids-orange hover:bg-kids-orange/10"
+                  >
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 }

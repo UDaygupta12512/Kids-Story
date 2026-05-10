@@ -69,7 +69,25 @@ export function StorySequencing({ storyText }: StorySequencingProps) {
   };
 
   useEffect(() => {
-    resetGame();
+    // Inline reset so the linter sees all deps are satisfied by storyText alone
+    const raw: StoryEvent[] = (() => {
+      if (storyText && storyText.length > 100) {
+        const sents = storyText.split(/[.!?]+/).filter(s => s.trim().length > 20).slice(0, 5);
+        if (sents.length >= 4) {
+          return sents.map((text, index) => ({ id: `event-${index}`, text: text.trim() + '.', order: index }));
+        }
+      }
+      return [
+        { id: 'event-0', text: 'A brave knight set out on a quest to find the magical crystal.', order: 0 },
+        { id: 'event-1', text: 'Along the way, the knight met a wise old wizard who gave them a map.', order: 1 },
+        { id: 'event-2', text: 'The knight faced many challenges, including crossing a dangerous river.', order: 2 },
+        { id: 'event-3', text: 'Finally, the knight reached the crystal cave and found the treasure.', order: 3 },
+        { id: 'event-4', text: "The knight returned home as a hero, sharing the crystal's magic with everyone.", order: 4 },
+      ];
+    })();
+    setEvents(shuffleArray(raw));
+    setIsCorrect(false);
+    setAttempts(0);
   }, [storyText]);
 
   const handleDragEnd = (result: DropResult) => {

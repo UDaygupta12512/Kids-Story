@@ -14,6 +14,7 @@ import { StorySequencing } from "@/components/StorySequencing";
 import { SpotDifference } from "@/components/SpotDifference";
 import { AudioStories } from "@/components/AudioStories";
 import { InteractiveConversations } from "@/components/InteractiveConversations";
+import { CuriosityEngine } from "@/components/CuriosityEngine";
 
 const Games = () => {
   const [currentStory, setCurrentStory] = useState<string>("");
@@ -53,7 +54,7 @@ const Games = () => {
           </div>
 
           <Tabs defaultValue="quiz" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10 mb-8 bg-white shadow-lg rounded-xl border-2 border-purple-200">
+            <TabsList className="grid w-full grid-cols-5 lg:grid-cols-11 mb-8 bg-white shadow-lg rounded-xl border-2 border-purple-200">
               <TabsTrigger 
                 value="quiz" 
                 className="text-purple-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-blue-500 data-[state=active]:text-white transition-all duration-200 rounded-lg font-semibold text-xs sm:text-sm"
@@ -114,6 +115,12 @@ const Games = () => {
               >
                 💬 Talk
               </TabsTrigger>
+              <TabsTrigger 
+                value="curiosity" 
+                className="text-violet-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-purple-500 data-[state=active]:text-white transition-all duration-200 rounded-lg font-semibold text-xs sm:text-sm"
+              >
+                🧠 Curiosity
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="quiz" className="mt-6 animate-fade-in">
@@ -154,6 +161,10 @@ const Games = () => {
 
             <TabsContent value="conversations" className="mt-6 animate-fade-in">
               <InteractiveConversations />
+            </TabsContent>
+
+            <TabsContent value="curiosity" className="mt-6 animate-fade-in">
+              <CuriosityEngine />
             </TabsContent>
           </Tabs>
         </div>

@@ -1,6 +1,7 @@
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, XCircle, Star, Sparkles, Trophy } from "lucide-react";
 
@@ -14,12 +15,63 @@ type StoryQuizProps = {
   storyText: string;
 };
 
+type ProgressState = {
+  completionPercent: number;
+  streak: number;
+  totalXp: number;
+  level: number;
+  lesson: number;
+  recentAchievements: string[];
+};
+
+const progressDefaults: ProgressState = {
+  completionPercent: 0,
+  streak: 1,
+  totalXp: 110,
+  level: 1,
+  lesson: 0,
+  recentAchievements: [],
+};
+
+const rewardBadges = [
+  "🌟 Quiz Star",
+  "🏆 Story Champ",
+  "🔥 Focus Streak",
+  "📚 Word Wizard",
+  "🎯 Sharp Thinker",
+];
+
+const achievementPool = [
+  "Quiz Explorer",
+  "Accuracy Apprentice",
+  "Story Sleuth",
+  "Perfect Score",
+  "Curiosity Builder",
+];
+
+const getProgress = (): ProgressState => {
+  const saved = localStorage.getItem("kidProgress");
+  if (!saved) return progressDefaults;
+  try {
+    return { ...progressDefaults, ...JSON.parse(saved) } as ProgressState;
+  } catch {
+    return progressDefaults;
+  }
+};
+
+const saveProgress = (data: ProgressState) => {
+  localStorage.setItem("kidProgress", JSON.stringify(data));
+};
+
 export function StoryQuiz({ storyText }: StoryQuizProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [quizCompleted, setQuizCompleted] = useState(false);
+  const [rewardApplied, setRewardApplied] = useState(false);
+  const [earnedBadges, setEarnedBadges] = useState<string[]>([]);
+  const [achievementsAdded, setAchievementsAdded] = useState<string[]>([]);
 
   // Helpers for randomness and uniqueness
   const shuffle = <T,>(array: T[]): T[] => {
@@ -162,8 +214,39 @@ export function StoryQuiz({ storyText }: StoryQuizProps) {
     setShowResult(false);
     setScore(0);
     setQuizCompleted(false);
+    setRewardApplied(false);
+    setEarnedBadges([]);
+    setAchievementsAdded([]);
     setNonce((n) => n + 1); // force fresh question generation
   };
+
+  useEffect(() => {
+    if (!quizCompleted || rewardApplied) return;
+
+    const percentage = Math.round((score / questions.length) * 100);
+    const isExcellent = percentage === 100;
+    const xpGain = Math.max(10, score * 10);
+    const newAchievements = [
+      achievementPool[score % achievementPool.length],
+      ...(isExcellent ? ["Perfect Score"] : []),
+    ];
+    const badges = rewardBadges.slice(0, Math.max(2, Math.ceil(score / 2)));
+
+    const progress = getProgress();
+    const updated: ProgressState = {
+      ...progress,
+      completionPercent: Math.min(100, progress.completionPercent + Math.round((percentage / 100) * 10)),
+      streak: progress.streak + 1,
+      totalXp: progress.totalXp + xpGain,
+      level: Math.max(1, Math.floor((progress.totalXp + xpGain) / 100)),
+      lesson: progress.lesson + 1,
+      recentAchievements: Array.from(new Set([...newAchievements, ...progress.recentAchievements])).slice(0, 5),
+    };
+    saveProgress(updated);
+    setEarnedBadges(badges);
+    setAchievementsAdded(newAchievements);
+    setRewardApplied(true);
+  }, [quizCompleted, rewardApplied, score, questions.length]);
 
   if (!storyText) {
     return (
@@ -222,6 +305,20 @@ export function StoryQuiz({ storyText }: StoryQuizProps) {
                     ? "👍 Good job! You got the main ideas!"
                     : "📖 Keep reading! Every story teaches us something new!"}
             </p>
+          </div>
+
+          <div className="bg-white rounded-lg p-4 shadow-inner space-y-3">
+            <p className="text-sm font-semibold text-gray-700">Badges Unlocked</p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {earnedBadges.map((badge) => (
+                <Badge key={badge} className="bg-kids-purple/10 text-kids-purple border border-kids-purple/20">
+                  {badge}
+                </Badge>
+              ))}
+            </div>
+            {achievementsAdded.length > 0 && (
+              <p className="text-xs text-gray-500">Achievements added: {achievementsAdded.join(", ")}.</p>
+            )}
           </div>
           
           <Button 

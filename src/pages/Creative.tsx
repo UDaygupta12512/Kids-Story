@@ -6,15 +6,29 @@ import { CharacterBuilder } from '@/components/CharacterBuilder';
 import { StoryLibrary } from '@/components/StoryLibrary';
 import { BranchingStory } from '@/components/BranchingStory';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sparkles, BookOpen, Users, GitBranch } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sparkles, BookOpen, Users, GitBranch, Heart, Globe } from 'lucide-react';
+import { RealWorldImpact } from '@/components/RealWorldImpact';
+import { StoryUniverse } from '@/components/StoryUniverse';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 export default function Creative() {
+  const navigate = useNavigate();
   const [currentStory, setCurrentStory] = useState("");
   const [currentTheme, setCurrentTheme] = useState("");
+  const [branchingTheme, setBranchingTheme] = useState("adventure");
 
   const handleLoadStory = (text: string, theme: string) => {
     setCurrentStory(text);
     setCurrentTheme(theme);
+  };
+
+  const openInGames = () => {
+    if (!currentStory) return;
+    localStorage.setItem('generatedStory', currentStory);
+    if (currentTheme) localStorage.setItem('lastTheme', currentTheme);
+    navigate('/games');
   };
 
   return (
@@ -33,8 +47,30 @@ export default function Creative() {
           </p>
         </div>
 
-        <Tabs defaultValue="characters" className="w-full max-w-6xl mx-auto">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+        <div className="w-full max-w-6xl mx-auto">
+          {currentStory && (
+            <div className="mb-6 rounded-2xl border border-kids-blue/20 bg-white/80 p-5 shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div>
+                  <p className="text-xs text-gray-500">Story Preview</p>
+                  <p className="font-semibold text-gray-800 line-clamp-2">{currentStory.substring(0, 180)}...</p>
+                  {currentTheme && (
+                    <span className="inline-block mt-2 text-xs text-kids-blue bg-kids-blue/10 px-2 py-1 rounded">
+                      {currentTheme}
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={openInGames} className="bg-kids-blue text-white hover:bg-kids-blue/90">
+                    Open in Games
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <Tabs defaultValue="characters" className="w-full">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger 
               value="characters"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-kids-purple data-[state=active]:to-kids-blue data-[state=active]:text-white"
@@ -55,6 +91,20 @@ export default function Creative() {
             >
               <GitBranch className="w-4 h-4 mr-2" />
               Interactive Story
+            </TabsTrigger>
+            <TabsTrigger 
+              value="impact"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
+            >
+              <Heart className="w-4 h-4 mr-2" />
+              Impact
+            </TabsTrigger>
+            <TabsTrigger 
+              value="universe"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white"
+            >
+              <Globe className="w-4 h-4 mr-2" />
+              Universe
             </TabsTrigger>
           </TabsList>
 
@@ -109,7 +159,27 @@ export default function Creative() {
           </TabsContent>
 
           <TabsContent value="branching" className="animate-fade-in">
-            <BranchingStory theme="adventure" />
+            <div className="mb-4 flex items-center gap-3">
+              <label className="text-sm font-medium text-kids-purple">Choose Theme:</label>
+              <Select value={branchingTheme} onValueChange={setBranchingTheme}>
+                <SelectTrigger className="w-52 rounded-lg border-kids-purple/30">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="adventure">🦁 Adventure</SelectItem>
+                  <SelectItem value="fantasy">✨ Fantasy</SelectItem>
+                  <SelectItem value="friendship">💝 Friendship</SelectItem>
+                  <SelectItem value="space">🚀 Space</SelectItem>
+                  <SelectItem value="animals">🐾 Animals</SelectItem>
+                  <SelectItem value="halloween">🎃 Halloween</SelectItem>
+                  <SelectItem value="christmas">🎄 Christmas</SelectItem>
+                  <SelectItem value="underwater">🌊 Underwater</SelectItem>
+                  <SelectItem value="puzzle">🧩 Secret Puzzle</SelectItem>
+                  <SelectItem value="mission">⚔️ Interactive Mission</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <BranchingStory key={branchingTheme} theme={branchingTheme} />
             
             <div className="mt-6 p-6 story-card bg-gradient-to-r from-kids-orange/10 to-kids-blue/10">
               <div className="flex items-start gap-3">
@@ -128,7 +198,16 @@ export default function Creative() {
               </div>
             </div>
           </TabsContent>
-        </Tabs>
+
+          <TabsContent value="impact" className="animate-fade-in">
+            <RealWorldImpact />
+          </TabsContent>
+
+          <TabsContent value="universe" className="animate-fade-in">
+            <StoryUniverse />
+          </TabsContent>
+          </Tabs>
+        </div>
       </main>
       
       <Footer />

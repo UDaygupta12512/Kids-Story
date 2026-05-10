@@ -18,20 +18,69 @@ export function MemoryMatch() {
   const [moves, setMoves] = useState(0);
   const [matches, setMatches] = useState(0);
   const [gameWon, setGameWon] = useState(false);
+  const [currentThemeKey, setCurrentThemeKey] = useState("default");
 
-  const cardPairs = [
-    { emoji: "🦁", label: "Lion" },
-    { emoji: "🐉", label: "Dragon" },
-    { emoji: "👑", label: "Crown" },
-    { emoji: "🏰", label: "Castle" },
-    { emoji: "🎭", label: "Theater" },
-    { emoji: "📚", label: "Books" },
-    { emoji: "🌟", label: "Star" },
-    { emoji: "🎨", label: "Art" },
-  ];
+  const themeSets: Record<string, { emoji: string; label: string }[]> = {
+    default: [
+      { emoji: "🦁", label: "Lion" }, { emoji: "🐉", label: "Dragon" },
+      { emoji: "👑", label: "Crown" }, { emoji: "🏰", label: "Castle" },
+      { emoji: "🎭", label: "Theater" }, { emoji: "📚", label: "Books" },
+      { emoji: "🌟", label: "Star" }, { emoji: "🎨", label: "Art" },
+    ],
+    adventure: [
+      { emoji: "🗺️", label: "Map" }, { emoji: "⚔️", label: "Sword" },
+      { emoji: "🏔️", label: "Mountain" }, { emoji: "💎", label: "Gem" },
+      { emoji: "🧭", label: "Compass" }, { emoji: "🏕️", label: "Camp" },
+      { emoji: "🦅", label: "Eagle" }, { emoji: "🔥", label: "Fire" },
+    ],
+    fantasy: [
+      { emoji: "🧙", label: "Wizard" }, { emoji: "🦄", label: "Unicorn" },
+      { emoji: "🧚", label: "Fairy" }, { emoji: "🐉", label: "Dragon" },
+      { emoji: "🔮", label: "Crystal" }, { emoji: "🪄", label: "Wand" },
+      { emoji: "🧝", label: "Elf" }, { emoji: "👑", label: "Crown" },
+    ],
+    space: [
+      { emoji: "🚀", label: "Rocket" }, { emoji: "🌍", label: "Earth" },
+      { emoji: "🌙", label: "Moon" }, { emoji: "⭐", label: "Star" },
+      { emoji: "👽", label: "Alien" }, { emoji: "🛸", label: "UFO" },
+      { emoji: "🪐", label: "Planet" }, { emoji: "☄️", label: "Comet" },
+    ],
+    animals: [
+      { emoji: "🐶", label: "Dog" }, { emoji: "🐱", label: "Cat" },
+      { emoji: "🐸", label: "Frog" }, { emoji: "🦋", label: "Butterfly" },
+      { emoji: "🐢", label: "Turtle" }, { emoji: "🐰", label: "Bunny" },
+      { emoji: "🦉", label: "Owl" }, { emoji: "🐬", label: "Dolphin" },
+    ],
+    halloween: [
+      { emoji: "🎃", label: "Pumpkin" }, { emoji: "👻", label: "Ghost" },
+      { emoji: "🦇", label: "Bat" }, { emoji: "🕷️", label: "Spider" },
+      { emoji: "🧛", label: "Vampire" }, { emoji: "🌙", label: "Moon" },
+      { emoji: "🍬", label: "Candy" }, { emoji: "🏚️", label: "House" },
+    ],
+    christmas: [
+      { emoji: "🎄", label: "Tree" }, { emoji: "🎅", label: "Santa" },
+      { emoji: "⛄", label: "Snowman" }, { emoji: "🎁", label: "Gift" },
+      { emoji: "🦌", label: "Reindeer" }, { emoji: "❄️", label: "Snow" },
+      { emoji: "🍪", label: "Cookie" }, { emoji: "🔔", label: "Bell" },
+    ],
+  };
+
+  const getCardPairs = () => {
+    const savedTheme = localStorage.getItem('lastTheme') || '';
+    const key = savedTheme.toLowerCase();
+    if (themeSets[key]) {
+      setCurrentThemeKey(key);
+      return themeSets[key];
+    }
+    setCurrentThemeKey("default");
+    return themeSets.default;
+  };
+
+  const cardPairs = themeSets[currentThemeKey];
 
   const initializeGame = () => {
-    const doubled = [...cardPairs, ...cardPairs];
+    const pairs = getCardPairs();
+    const doubled = [...pairs, ...pairs];
     const shuffled = doubled
       .sort(() => Math.random() - 0.5)
       .map((card, index) => ({
@@ -53,11 +102,11 @@ export function MemoryMatch() {
   }, []);
 
   useEffect(() => {
-    if (matches === cardPairs.length && matches > 0) {
+    if (matches === cardPairs.length && matches > 0 && !gameWon) {
       setGameWon(true);
       toast.success(`🎉 You won in ${moves} moves!`);
     }
-  }, [matches]);
+  }, [matches, moves]);
 
   useEffect(() => {
     if (flippedCards.length === 2) {

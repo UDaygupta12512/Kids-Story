@@ -12,18 +12,27 @@ interface StoryCertificateProps {
   completionDate?: Date;
 }
 
-export const StoryCertificate = ({ 
-  storyTitle, 
+export const StoryCertificate = ({
+  storyTitle,
   userName = "Young Reader",
   completionDate = new Date()
 }: StoryCertificateProps) => {
   const { toast } = useToast();
   const [showConfetti, setShowConfetti] = useState(false);
-  const [achievements, setAchievements] = useState({
-    storiesRead: 1,
-    wordsLearned: 25,
-    badges: ['First Story', 'Creative Thinker'],
-    level: 1,
+
+  // Derive real stats from localStorage
+  const savedStories: { text: string }[] = JSON.parse(localStorage.getItem('savedStories') || '[]');
+  const storiesRead = Math.max(1, savedStories.length);
+  const wordsLearned = Math.min(storiesRead * 25, 200);
+  const storiesPerLevel = 3;
+  const level = Math.floor((storiesRead - 1) / storiesPerLevel) + 1;
+  const progressToNext = ((storiesRead - 1) % storiesPerLevel) / storiesPerLevel;
+  const storiesUntilNext = storiesPerLevel - ((storiesRead - 1) % storiesPerLevel);
+
+  const [achievements] = useState({
+    storiesRead,
+    wordsLearned,
+    level,
   });
 
   useEffect(() => {
@@ -232,9 +241,11 @@ export const StoryCertificate = ({
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <h4 className="font-bold text-lg">Progress to Level {achievements.level + 1}</h4>
-            <span className="text-sm text-muted-foreground">2 more stories</span>
+            <span className="text-sm text-muted-foreground">
+              {storiesUntilNext} more {storiesUntilNext === 1 ? 'story' : 'stories'}
+            </span>
           </div>
-          <Progress value={33} className="h-3" />
+          <Progress value={Math.round(progressToNext * 100)} className="h-3" />
           <p className="text-sm text-muted-foreground text-center">
             Keep reading to unlock more badges and rewards!
           </p>

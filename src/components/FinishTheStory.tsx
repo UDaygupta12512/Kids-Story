@@ -15,9 +15,10 @@ export function FinishTheStory({ storyText }: FinishTheStoryProps) {
   // Extract first part of story for the prompt
   const getStoryPrompt = () => {
     if (!storyText) return '';
-    const sentences = storyText.split('. ');
+    // Split on any whitespace after sentence-ending punctuation to handle .\n endings too
+    const sentences = storyText.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
     const promptSentences = sentences.slice(0, Math.ceil(sentences.length * 0.6));
-    return promptSentences.join('. ') + (promptSentences.length > 0 ? '...' : '');
+    return promptSentences.join(' ') + (promptSentences.length > 0 ? '...' : '');
   };
 
   const handleSubmit = () => {

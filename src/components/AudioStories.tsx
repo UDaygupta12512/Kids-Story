@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Play, Pause, Volume2, BookOpen, Star, Clock } from 'lucide-react';
+import { Play, Pause, Volume2, BookOpen, Star, Clock, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 const audioStories = [
@@ -72,6 +72,15 @@ export function AudioStories() {
   const [playingId, setPlayingId] = useState<number | null>(null);
   const [selectedStory, setSelectedStory] = useState<typeof audioStories[0] | null>(null);
   const [utterance, setUtterance] = useState<SpeechSynthesisUtterance | null>(null);
+  const [userStory, setUserStory] = useState<string | null>(null);
+  const [userStoryTheme, setUserStoryTheme] = useState<string>("My Story");
+
+  useEffect(() => {
+    const saved = localStorage.getItem('generatedStory');
+    const theme = localStorage.getItem('lastTheme');
+    if (saved) setUserStory(saved);
+    if (theme) setUserStoryTheme(theme);
+  }, []);
 
   const handlePlay = (story: typeof audioStories[0]) => {
     if ('speechSynthesis' in window) {
@@ -136,6 +145,58 @@ export function AudioStories() {
           while keeping learning exciting and effortless. Tune in, listen, and learn English the fun way!
         </p>
       </div>
+
+      {/* Read My Story */}
+      {userStory && (
+        <Card className="border-2 border-kids-purple/40 bg-gradient-to-r from-kids-purple/10 to-kids-blue/10 overflow-hidden">
+          <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-4">
+            <div className="text-5xl">
+              <Sparkles className="w-10 h-10 text-kids-purple" />
+            </div>
+            <div className="flex-1 text-center sm:text-left">
+              <h3 className="font-bold text-lg text-kids-purple">Listen to Your Story!</h3>
+              <p className="text-sm text-gray-600">Hear your <strong>{userStoryTheme}</strong> story read aloud</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => handlePlay({
+                  id: -1,
+                  title: "My Story",
+                  category: userStoryTheme,
+                  duration: "",
+                  level: "",
+                  emoji: "📖",
+                  description: "",
+                  story: userStory,
+                })}
+                className={`${playingId === -1 ? 'bg-kids-orange hover:bg-kids-orange/90' : 'bg-gradient-to-r from-kids-purple to-kids-blue'}`}
+              >
+                {playingId === -1 ? (
+                  <><Pause className="w-4 h-4 mr-1" /> Stop</>
+                ) : (
+                  <><Play className="w-4 h-4 mr-1" /> Listen</>
+                )}
+              </Button>
+              <Button
+                onClick={() => handleViewStory({
+                  id: -1,
+                  title: "My Generated Story",
+                  category: userStoryTheme,
+                  duration: "",
+                  level: "",
+                  emoji: "📖",
+                  description: "",
+                  story: userStory,
+                })}
+                variant="outline"
+                className="border-kids-purple/30 hover:bg-kids-purple/10"
+              >
+                <BookOpen className="w-4 h-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stories Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
